@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local Cursor agent briefing — never push (Yong keeps this on disk only)
+AGENTS.md
+.cursor/
