@@ -2,7 +2,9 @@
 
 Working agreement for this repo. Source: [SDOHPlace-MetadataManager#87](https://github.com/healthyregions/SDOHPlace-MetadataManager/issues/87) and follow-up comments (Aug 2026).
 
-Update this file when Marynia answers or the interface changes. Do **not** start merge/dissolve implementation until §8 is resolved.
+**Also read [handoff-context.md](handoff-context.md)** (why the pipeline exists, Alaska bug, HEROP_ID, what was already said on GitHub/Slack, Cursor folders). A new chat will not have the old Metadata Manager thread.
+
+Update these files when Marynia answers or the interface changes. Do **not** start merge/dissolve implementation until §8 is resolved.
 
 ---
 
@@ -187,7 +189,9 @@ Existing `coverage.py` HEROP URLs (2018 examples):
 https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/county-2018-500k-shp.zip
 ```
 
-Levels: `state` `040US` (id len 2), `county` `050US` (5), `tract` `140US` (11), `bg` `150US` (12), `zcta` `860US` (5).
+Levels: `state` `040US` (id len 2), `county` `050US` (5), `tract` `140US` (11), `bg` `150US` (12), `zcta` `860US` (5). Full HEROP_ID table and `highlight_ids` include/exclude/`*` rules: [handoff-context.md](handoff-context.md).
+
+When porting `coverage.py`: enum `blockgroup` ≠ map key `bg` (KeyError). Lambda `spatial_level` is `bg`. Prefer a `FIPS` column, else `geo_id_column`; zfill; then `prefix + FIPS == HEROP_ID`.
 
 **Simplify is required.** Today’s ~18KB figure is a simplified US polygon. A raw county/tract dissolve can exceed the 6MB sync payload and hurt Solr. Even with async, keep WKT small. Test DOSE-SYS, County Health Rankings, and a tract-level national file before calling size “fine.”
 
