@@ -20,7 +20,9 @@ uploads/{record_id}/{timestamp}/{filename}
 uploads/{record_id}/{timestamp}/result.json
 ```
 
-Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET` (default `herop-sdohplace-upload`).
+Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET` (default `herop-sdohplace-upload`). Example payload: [`examples/invoke-payload.json`](examples/invoke-payload.json).
+
+This branch covers [#2](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/2) (stub) and [#3](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/3) (bucket name).
 
 ```
 pip install -r requirements-dev.txt
