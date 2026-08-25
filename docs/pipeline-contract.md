@@ -49,10 +49,10 @@ Flow:
 
 | | |
 | --- | --- |
-| Uploads bucket | `herop-sdohplace-uploads` |
+| Uploads bucket | `herop-sdohplace-upload` |
 | Region | `us-east-2` (same as `herop-geodata`) |
 | Public access | none |
-| IAM | **not set up yet** — Yong needs AWS access in this account |
+| IAM | execution role `herop-sdohplace-spatial-role` in place; EC2 `InvokeFunction` after the function exists |
 | HEROP boundaries | `herop-geodata` prefix `oeps/` — vintages **2010** and **2018** |
 
 **Keep-until-publish** (not delete-on-Lambda-return). Wipe Lambda `/tmp` after each run. Manager may delete the job folder after the curator publishes.
@@ -91,7 +91,7 @@ uploads/herop-rsulgs/20260820T143022Z/result.json
 | Field | Notes |
 | --- | --- |
 | `record_id` | Logging / correlation only. Lambda never writes the record. |
-| `s3_key` | Object in `herop-sdohplace-uploads`. Derive the job folder from this key; write `result.json` next to the file. |
+| `s3_key` | Object in `herop-sdohplace-upload`. Derive the job folder from this key; write `result.json` next to the file. |
 | `upload_kind` | `csv` or `geo`. `geo` = zip (shapefile sidecars) or a single GeoJSON. |
 | `boundary_year` | CSV path only. v1: `2010` or `2018`. |
 | `spatial_level` | CSV path only. `state` \| `county` \| `tract` \| `bg` \| `zcta`. Manager maps schema labels (`"County"`, `"Census Tract"`, …) **before** invoke. |
@@ -225,15 +225,20 @@ This is **not** “2010 IDs drawn on 2018 boundaries.” Snapping 2010 data to 2
 
 ---
 
-## 7. AWS / IAM (not done yet)
+## 7. AWS / IAM
 
-Yong owns Lambda IAM + deploys. Pengyin created the uploads bucket; IAM is unset.
+Yong owns Lambda IAM + deploys. Pengyin created the uploads bucket **`herop-sdohplace-upload`** (`us-east-2`; name is singular, not `uploads`).
 
-Needed:
+In place:
 
-- **Lambda execution role:** `s3:GetObject` on the upload, `s3:PutObject` for `result.json`; read `herop-geodata` / `oeps/`.
-- **EC2 / manager:** `s3:PutObject` / `GetObject` (poll) / delete-after-publish; `lambda:InvokeFunction`.
-- Yong needs AWS access in the same account, or a function stub to take over.
+- Yong console user (`ywkim@illinois.edu`)
+- Execution role `herop-sdohplace-spatial-role`: trust `lambda.amazonaws.com`; inline S3 GetObject on the bucket / PutObject on `*/result.json`; `AWSLambdaBasicExecutionRole` for logs (`AWSLambdaExecute` removed)
+- `herop-geodata` public `GetObject` for `oeps/` (no extra IAM on the Lambda role for v1)
+
+Still needed:
+
+- **EC2 instance role:** `lambda:InvokeFunction` on `herop-sdohplace-spatial` — Pengyin will add this when the function exists (ping her)
+- Confirm `iam:PassRole` on `herop-sdohplace-spatial-role` when creating the function
 
 ---
 
@@ -254,8 +259,8 @@ Regular (not stress) tests: download via discovery app [search.sdohplace.org](ht
 
 ## 9. Still needed from Pengyin
 
-- AWS account access (or create the Lambda stub and hand off).
 - Confirm job-folder key pattern vs `uploads/{record_id}/{timestamp}-{filename}` (folder form is for async poll).
+- `lambda:InvokeFunction` on the EC2 role after the function exists.
 - Shared bbox/centroid fixtures if the manager will recompute on hand-edit.
 
 ---

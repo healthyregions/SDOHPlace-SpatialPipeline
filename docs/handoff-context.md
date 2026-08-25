@@ -131,7 +131,7 @@ uploads/{record_id}/{timestamp}/{filename}
 uploads/{record_id}/{timestamp}/result.json
 ```
 
-Use the folder form unless she objects. Bucket she created: `herop-sdohplace-uploads`, `us-east-2`, no public access, IAM unset.
+Use the folder form unless she objects. Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
 
 HEROP merge files live in **`oeps/`** on `herop-geodata` (2010 and 2018 shapefiles). Discovery **tiles** live under **`sdohplace/`** and are **2018 only** for all six levels; frontend hardcodes `<level>-2018.pmtiles`. Those two prefixes are easy to mix up.
 

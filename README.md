@@ -10,3 +10,19 @@ Read these **before coding** (a new Cursor window will not have the old chat):
 2. [docs/handoff-context.md](docs/handoff-context.md) — Alaska bug, HEROP_ID, GitHub/Slack decisions, folders
 
 Development branch: `dev`.
+
+## Status
+
+Skeleton handler only. It reads the manager invoke payload, derives the job folder from `s3_key`, and writes a stub `result.json` (`ok: false`, `error_code: not_implemented`). It does **not** derive geometry — a fake success outline would recreate the Alaska bug.
+
+```
+uploads/{record_id}/{timestamp}/{filename}
+uploads/{record_id}/{timestamp}/result.json
+```
+
+Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET` (default `herop-sdohplace-upload`).
+
+```
+pip install -r requirements-dev.txt
+pytest
+```
