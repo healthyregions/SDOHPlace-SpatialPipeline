@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import json
 
 import pytest
@@ -13,6 +15,10 @@ class FakeS3:
         if isinstance(Body, str):
             Body = Body.encode("utf-8")
         self.objects[(Bucket, Key)] = {"Body": Body, "ContentType": ContentType}
+
+    def get_object(self, *, Bucket, Key):
+        item = self.objects[(Bucket, Key)]
+        return {"Body": BytesIO(item["Body"])}
 
 
 def _event():
