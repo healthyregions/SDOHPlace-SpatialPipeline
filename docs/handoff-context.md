@@ -209,6 +209,7 @@ Not a frozen enum, but use these so manager and Lambda match:
 
 | `error_code` | When |
 | --- | --- |
+| `not_implemented` | Stub handler only; derivation not built yet. Manager can still poll `result.json`. |
 | `unreadable_file` | Cannot read CSV/zip/GeoJSON |
 | `no_id_column` | No FIPS / GEOID / HEROP_ID / named column |
 | `no_matching_ids` | Zero IDs matched the chosen vintage/level |
