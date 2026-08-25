@@ -221,6 +221,6 @@ Not a frozen enum, but use these so manager and Lambda match:
 
 ---
 
-## Do not start merge/dissolve until
+## Do not treat these as frozen
 
-Marynia answers contract §8, and Pengyin confirms AWS access + the S3 folder key. Skeleton (handler + stub `result.json`) is optional. Update **these docs** when answers arrive, then code on `dev`.
+v1 defaults are in [pipeline-contract.md](pipeline-contract.md) §8 (Pengyin Aug 2026). Marynia asked to prototype now and refine in September/October with Mallikarjun (edge cases / full dataset runs) and a GRA (research + later v2). Census Place and 2010 pmtiles stay post-v1.

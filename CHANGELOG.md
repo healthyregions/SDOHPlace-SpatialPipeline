@@ -21,6 +21,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 ### Confirmed
 
 - S3 job-folder keys ([#4](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/4)): `uploads/{record_id}/{timestamp}/{filename}` and `result.json` in the same folder. One Generate click = one directory; multiple jobs can exist at once.
+- v1 product defaults (Pengyin, Aug 2026; [#19](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/19), also [#5](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/5)): state-name `spatial_coverage` (no Census Place); 2010 geometry + empty `highlight_ids`; one Generate = one level; raster = envelope only; test OEPS via search.sdohplace.org; manager **warns** if `match_rate` < 0.9 (no hard refuse). Refine Sept/Oct.
 
 ### AWS (not code)
 
