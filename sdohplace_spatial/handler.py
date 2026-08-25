@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
+import tempfile
 from typing import Any
 
 import boto3
@@ -82,6 +84,27 @@ def derive_result(event: dict[str, Any], s3_client: Any, bucket: str) -> dict[st
     return body
 
 
+def wipe_run_tmp() -> None:
+    """Remove leftover files from this invocation. On Lambda, clear /tmp."""
+    root = tempfile.gettempdir()
+    try:
+        names = os.listdir(root)
+    except OSError:
+        return
+    lambda_runtime = bool(os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+    for name in names:
+        if not lambda_runtime and not name.startswith("sdoh-"):
+            continue
+        path = os.path.join(root, name)
+        if os.path.isdir(path):
+            shutil.rmtree(path, ignore_errors=True)
+        else:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
+
 def lambda_handler(event: dict[str, Any] | None, context: Any, s3_client: Any | None = None) -> dict[str, Any]:
     """Direct async invoke payload (no API Gateway wrapper)."""
     event = event if isinstance(event, dict) else {}
@@ -91,12 +114,15 @@ def lambda_handler(event: dict[str, Any] | None, context: Any, s3_client: Any | 
     try:
         result_key = result_key_from_s3_key(event.get("s3_key"))
     except InvalidS3Key as exc:
+        wipe_run_tmp()
         raise ValueError(f"invalid payload: {exc}") from exc
 
     try:
         body = derive_result(event, client, bucket)
     except PipelineError as exc:
         body = failure_result(exc.error_code, exc.message, event.get("record_id"))
+    finally:
+        wipe_run_tmp()
 
     write_result_json(client, bucket, result_key, body)
     return body

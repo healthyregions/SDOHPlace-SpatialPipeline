@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from sdohplace_spatial.handler import STUB_ERROR_CODE, lambda_handler
+from sdohplace_spatial.handler import STUB_ERROR_CODE, lambda_handler, wipe_run_tmp
 
 
 class FakeS3:
@@ -59,3 +59,21 @@ def test_handler_missing_s3_key_does_not_write():
     with pytest.raises(ValueError, match="invalid payload"):
         lambda_handler({"record_id": "herop-rsulgs"}, None, s3_client=s3)
     assert s3.objects == {}
+
+
+def test_wipe_run_tmp_only_sdoh_prefix(tmp_path, monkeypatch):
+    monkeypatch.delenv("AWS_LAMBDA_FUNCTION_NAME", raising=False)
+    monkeypatch.setenv("TMPDIR", str(tmp_path))
+    monkeypatch.setenv("TMP", str(tmp_path))
+    monkeypatch.setenv("TEMP", str(tmp_path))
+    import tempfile as tf
+
+    monkeypatch.setattr(tf, "tempdir", str(tmp_path))
+    keep = tmp_path / "keep-me"
+    keep.mkdir()
+    junk = tmp_path / "sdoh-geo-test"
+    junk.mkdir()
+    (junk / "x").write_text("x")
+    wipe_run_tmp()
+    assert keep.is_dir()
+    assert not junk.exists()
