@@ -25,7 +25,6 @@ def _event():
     return {
         "record_id": "herop-rsulgs",
         "s3_key": "uploads/herop-rsulgs/20260820T143022Z/dose_sys_counties.csv",
-        "upload_kind": "csv",
         "boundary_year": 2018,
         "spatial_level": "county",
         "geo_id_column": "GEOID",
