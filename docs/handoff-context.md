@@ -124,14 +124,14 @@ uploads/{record_id}/{timestamp}-{filename}
 e.g. uploads/herop-rsulgs/20260820T143022Z-dose_sys_counties.csv
 ```
 
-Yong’s async tweak (job **folder**, not yet confirmed by Pengyin):
+Yong’s async tweak (job **folder**), confirmed by Pengyin Aug 2026:
 
 ```
 uploads/{record_id}/{timestamp}/{filename}
 uploads/{record_id}/{timestamp}/result.json
 ```
 
-Use the folder form unless she objects. Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
+One Generate click = one directory. Several jobs can exist at once (different `{timestamp}` folders). Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
 
 HEROP merge files live in **`oeps/`** on `herop-geodata` (2010 and 2018 shapefiles). Discovery **tiles** live under **`sdohplace/`** and are **2018 only** for all six levels; frontend hardcodes `<level>-2018.pmtiles`. Those two prefixes are easy to mix up.
 

@@ -71,7 +71,7 @@ uploads/herop-rsulgs/20260820T143022Z/dose_sys_counties.csv
 uploads/herop-rsulgs/20260820T143022Z/result.json
 ```
 
-`timestamp` is UTC `YYYYMMDDTHHMMSSZ`. One Generate click = one job folder.
+`timestamp` is UTC `YYYYMMDDTHHMMSSZ`. One Generate click = one job folder. Confirmed with Pengyin (Aug 2026). Multiple jobs can run at once; each has its own `{timestamp}` directory.
 
 ---
 
@@ -259,8 +259,7 @@ Regular (not stress) tests: download via discovery app [search.sdohplace.org](ht
 
 ## 9. Still needed from Pengyin
 
-- Confirm job-folder key pattern vs `uploads/{record_id}/{timestamp}-{filename}` (folder form is for async poll).
-- `lambda:InvokeFunction` on the EC2 role after the function exists.
+- `lambda:InvokeFunction` on the EC2 role after the function exists (#11).
 - Shared bbox/centroid fixtures if the manager will recompute on hand-edit.
 
 ---
