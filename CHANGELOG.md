@@ -11,6 +11,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 - CSV ID join ([#7](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/7)): `upload_kind: csv` against 2018 `oeps/` shapefiles. Prefers `FIPS`, then `geo_id_column` / `HEROP_ID` / `GEOID`; zfill; `prefix + FIPS == HEROP_ID`. `spatial_level` is `bg` (not `blockgroup`). `highlight_ids` uses the coverage.py include / minus / `*` rules. Zero matches or mixed GEOID lengths fail. Partial matches succeed with diagnostics. `spatial_coverage` stays `[]` pending Marynia. Geometry is the simplified dissolve of **matched** units. 2010 CSV is still `not_implemented` (#9).
 - Example invoke payloads under `examples/`.
 - Unit tests (`pytest`); handler uses an injectable S3 client so tests do not need AWS.
+- GitHub Actions workflow ([#16](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/16)) runs `pytest` on Python 3.10 and 3.12 for pushes and PRs to `dev` / `main`.
 
 ### Changed
 
