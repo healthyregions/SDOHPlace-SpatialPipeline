@@ -12,6 +12,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 - Example invoke payloads under `examples/`.
 - Unit tests (`pytest`); handler uses an injectable S3 client so tests do not need AWS.
 - GitHub Actions workflow ([#16](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/16)) runs `pytest` on Python 3.10 and 3.12 for pushes and PRs to `dev` / `main`.
+- Lambda **container image** ([#10](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/10)): `Dockerfile` (`linux/amd64`, Python 3.12) and [`docs/deploy.md`](docs/deploy.md) for ECR + `herop-sdohplace-spatial`. Handler wipes `sdoh-*` temp dirs after each run (full `/tmp` on Lambda).
 
 ### Changed
 

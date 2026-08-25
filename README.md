@@ -11,15 +11,6 @@ Read these **before coding** (a new Cursor window will not have the old chat):
 
 Development branch: `dev`.
 
-## Status
-
-Skeleton handler only. It reads the manager invoke payload, derives the job folder from `s3_key`, and writes a stub `result.json` (`ok: false`, `error_code: not_implemented`). It does **not** derive geometry — a fake success outline would recreate the Alaska bug.
-
-```
-uploads/{record_id}/{timestamp}/{filename}
-uploads/{record_id}/{timestamp}/result.json
-```
-
 Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET` (default `herop-sdohplace-upload`). Example payload: [`examples/invoke-payload.json`](examples/invoke-payload.json).
 
 `upload_kind: geo` reads a GeoJSON or shapefile zip from S3, reprojects to EPSG:4326, simplifies, and writes WKT / bbox / centroid. `highlight_ids` is `[]` (no HEROP join yet).
@@ -30,3 +21,5 @@ Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET
 pip install -r requirements-dev.txt
 pytest
 ```
+
+Lambda is a **container image** (not a zip). Build and deploy: [`docs/deploy.md`](docs/deploy.md).
