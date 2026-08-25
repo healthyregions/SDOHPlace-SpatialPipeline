@@ -22,7 +22,9 @@ uploads/{record_id}/{timestamp}/result.json
 
 Handler: `sdohplace_spatial.handler.lambda_handler`. Bucket env: `UPLOADS_BUCKET` (default `herop-sdohplace-upload`). Example payload: [`examples/invoke-payload.json`](examples/invoke-payload.json).
 
-`upload_kind: geo` reads a GeoJSON or shapefile zip from S3, reprojects to EPSG:4326, simplifies, and writes WKT / bbox / centroid. `highlight_ids` is `[]` (no HEROP join yet). CSV is still the `not_implemented` stub.
+`upload_kind: geo` reads a GeoJSON or shapefile zip from S3, reprojects to EPSG:4326, simplifies, and writes WKT / bbox / centroid. `highlight_ids` is `[]` (no HEROP join yet).
+
+`upload_kind: csv` joins 2018 HEROP `oeps/` boundaries by FIPS / GEOID / `HEROP_ID` and writes `highlight_ids` plus a simplified dissolve of matched units. `spatial_coverage` is still empty pending product grain.
 
 ```
 pip install -r requirements-dev.txt

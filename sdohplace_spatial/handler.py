@@ -1,4 +1,4 @@
-"""Lambda entry: S3 in → result.json out. CSV is still a stub; geo path is #6."""
+"""Lambda entry: S3 in → result.json out."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from typing import Any
 
 import boto3
 
+from sdohplace_spatial.csv_join import derive_csv
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.geo import derive_geo
 from sdohplace_spatial.keys import InvalidS3Key, result_key_from_s3_key
@@ -71,10 +72,14 @@ def derive_result(event: dict[str, Any], s3_client: Any, bucket: str) -> dict[st
     if kind == "geo":
         raw = _s3_bytes(s3_client, bucket, event["s3_key"])
         body = derive_geo(raw, event["s3_key"])
-        if event.get("record_id") is not None:
-            body["record_id"] = event.get("record_id")
-        return body
-    return stub_result(event)
+    elif kind == "csv":
+        raw = _s3_bytes(s3_client, bucket, event["s3_key"])
+        body = derive_csv(raw, event)
+    else:
+        return stub_result(event)
+    if event.get("record_id") is not None:
+        body["record_id"] = event.get("record_id")
+    return body
 
 
 def lambda_handler(event: dict[str, Any] | None, context: Any, s3_client: Any | None = None) -> dict[str, Any]:
