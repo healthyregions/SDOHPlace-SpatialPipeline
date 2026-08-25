@@ -4,7 +4,7 @@ Working agreement for this repo. Source: [SDOHPlace-MetadataManager#87](https://
 
 **Also read [handoff-context.md](handoff-context.md)** (why the pipeline exists, Alaska bug, HEROP_ID, what was already said on GitHub/Slack, Cursor folders). A new chat will not have the old Metadata Manager thread.
 
-Update these files when Marynia answers or the interface changes. Do **not** start merge/dissolve implementation until §8 is resolved.
+Update these files when product answers or the interface changes.
 
 ---
 
@@ -161,7 +161,7 @@ Aardvark / OGM formats. Coordinate order is a trap: WKT is lon-lat; centroid is 
 
 Partial matches → `ok: true` plus diagnostics. Vintage mismatch is a **warning**, not a crash.
 
-Lambda does **not** refuse to write based on `match_rate` (except 0). If the curator should be blocked below a threshold, that is the **manager** (show diagnostics, confirm). Marynia sets the threshold (§8).
+Lambda does **not** refuse to write based on `match_rate` (except 0). The **manager** shows a **warning below 0.9** and does not hard-refuse; the curator decides. Tune later from real runs (Pengyin, Aug 2026).
 
 Overwrite on Generate: spatial fields + `highlight_ids` only. Non-spatial fields are never touched. Manager snapshots before write.
 
@@ -181,7 +181,7 @@ Port/extend ID-join logic from Metadata Manager `manager/coverage/coverage.py` (
 4. Dissolve matched units → **simplify** → WKT.
 5. `bounding_box` / `centroid` from that outline.
 6. `highlight_ids` from the ID join (same include / exclude / `050US*` idea as `coverage.py`) — **not** from a spatial intersection. **2018 only** for a non-empty list (see vintages).
-7. `spatial_coverage` — pending Marynia; default assumption is unique **state names**, plus `United States` / `Contiguous US` when coverage is national / CONUS. **No Census Place intersect in v1** (slow, huge lists, poor Solr facets).
+7. `spatial_coverage` — unique **state names**, plus `United States` / `Contiguous US` when coverage is national / CONUS (Pengyin: yes for v1; `dct_spatial_sm` is not a live discovery facet). **No Census Place intersect in v1.**
 
 Existing `coverage.py` HEROP URLs (2018 examples):
 
@@ -201,21 +201,21 @@ When porting `coverage.py`: enum `blockgroup` ≠ map key `bg` (KeyError). Lambd
 
 Read zip shapefile or GeoJSON → reproject EPSG:4326 → simplify → same output fields. `highlight_ids` for geo uploads may need a spatial join onto 2018 HEROP units; if that is not ready, return `[]` + warning rather than inventing IDs.
 
-### Vintages (pending Marynia on tiles)
+### Vintages (v1)
 
 Facts:
 
 - Merge shapefiles (`oeps/`): **2010 and 2018**.
 - Discovery app tiles: **2018 only** (`<level>-2018.pmtiles`). 2010 `highlight_ids` would paint a **blank** Show coverage map.
 
-Proposed v1 (Pengyin agreed pending Marynia):
+v1 (Pengyin, Aug 2026):
 
 | `boundary_year` | geometry / coverage | `highlight_ids` |
 | --- | --- | --- |
 | 2018 | 2018 `oeps/` shapefiles | full ID-join list |
 | 2010 | **2010** `oeps/` shapefiles | `[]` + warning that tiles are 2018-only |
 
-This is **not** “2010 IDs drawn on 2018 boundaries.” Snapping 2010 data to 2018 geometry would be a different policy. No 2010→2018 crosswalk in v1. Adding 2010 pmtiles is Marynia’s call.
+Map search still uses `locn_geometry` (2010 outline is findable). Show coverage is empty for 2010. This is **not** 2010 IDs on 2018 boundaries. No 2010→2018 crosswalk in v1. 2010 pmtiles can wait.
 
 ### Out of scope (v1)
 
@@ -242,18 +242,16 @@ Still needed:
 
 ---
 
-## 8. Open — wait for Marynia (`@Makosak`)
+## 8. v1 product decisions (Pengyin Aug 2026; refine Sept/Oct)
 
-Do not implement merge/dissolve until these are decided (skeleton/docs are OK).
+Marynia asked for a prototype first. Pengyin filled manager/frontend implications. Adjust after real data + Mallikarjun / GRA.
 
-1. **`spatial_coverage` grain** — confirm state names + `United States` / `Contiguous US`; Census Places deferred.
-2. **Vintage / tiles** — keep 2010 geometry + empty `highlight_ids`, or add 2010 pmtiles so Show coverage works for 2010.
-3. **Multi-resolution records** — map shows all levels or only the finest? One Generate = one `spatial_level` regardless.
-4. **Raster** — out of this pipeline, envelope only.
-5. **Large test files** — 3–4 real files (DOSE-SYS, County Health Rankings, tract-national, awkward cases) to time-budget against.
-6. **Manager write policy** — refuse to save below some `match_rate` even when Lambda returns `ok: true`?
-
-Regular (not stress) tests: download via discovery app [search.sdohplace.org](https://search.sdohplace.org) **Go to Resource**. Box / OEPS copies TBD with Marynia.
+1. **`spatial_coverage` grain** — unique state names + `United States` / `Contiguous US` when national / CONUS. Census Places after v1. `dct_spatial_sm` is not a live discovery facet today (not keyword; map search uses `locn_geometry`).
+2. **Vintage / tiles** — 2010 **geometry** from 2010 `oeps/` (map search works). `highlight_ids` `[]` so Show coverage is blank (2018 pmtiles only).
+3. **Multi-resolution records** — one Generate = one `spatial_level`. Multi-resolution on the record is Filter-only today; it does not drive the map. Default is fine for v1.
+4. **Raster** — out of this dissolve pipeline. Bbox / envelope (or the same default other map search tools use). Frontend unchanged.
+5. **Test files** — download via [search.sdohplace.org](https://search.sdohplace.org) **Go to Resource**. Pengyin: test **OEPS** datasets first (known correct answers). Then more files / edge cases with Mallikarjun.
+6. **Manager write policy** — **no hard refuse**. Warning if `match_rate` **< 0.9**; curator decides. Lambda still `ok: true` on partial match. Tune later.
 
 ---
 
@@ -264,7 +262,7 @@ Regular (not stress) tests: download via discovery app [search.sdohplace.org](ht
 
 ---
 
-## 10. Implementation order (after §8)
+## 10. Implementation order
 
 1. Skeleton: handler reads input, writes a stub `result.json` (no geopandas yet).
 2. S3 read + `upload_kind: geo` reproject/simplify (no HEROP join).
