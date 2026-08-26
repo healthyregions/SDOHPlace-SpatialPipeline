@@ -124,14 +124,14 @@ uploads/{record_id}/{timestamp}-{filename}
 e.g. uploads/herop-rsulgs/20260820T143022Z-dose_sys_counties.csv
 ```
 
-Yong’s async tweak (job **folder**), confirmed by Pengyin Aug 2026:
+Yong’s async tweak (job **folder**), confirmed by Pengyin Aug 2026 (and reconfirmed in Slack):
 
 ```
 uploads/{record_id}/{timestamp}/{filename}
 uploads/{record_id}/{timestamp}/result.json
 ```
 
-One Generate click = one directory. Several jobs can exist at once (different `{timestamp}` folders). Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
+One Generate click = one directory. Several jobs can exist at once (different `{timestamp}` folders). Not “only one job on the whole bucket.” Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
 
 HEROP merge files live in **`oeps/`** on `herop-geodata` (2010 and 2018 shapefiles). Discovery **tiles** live under **`sdohplace/`** and are **2018 only** for all six levels; frontend hardcodes `<level>-2018.pmtiles`. Those two prefixes are easy to mix up.
 
@@ -149,7 +149,9 @@ Agreed: **async**. Do not raise gunicorn. `InvocationType=Event`. Write `result.
 
 ## Frontend constraint (Pengyin’s manager/discovery work, not this repo)
 
-`dynamicMap.tsx` currently takes the **first** highlight ID’s 3-character prefix and draws **one** tile layer. A list like `["050US*","140US*"]` shows counties and **drops tracts**. That is why OEPS Data Package highlights only counties. Pengyin will group by prefix. Until that ships, mixed-level `highlight_ids` will not all render. Lambda still: **one** `spatial_level` per Generate.
+`dynamicMap.tsx` currently takes the **first** highlight ID’s 3-character prefix and draws **one** tile layer. A list like `["050US*","140US*"]` shows counties and **drops tracts**. That is why OEPS Data Package highlights only counties.
+
+Pengyin demoed multi-color Show coverage (county orange, tract purple, etc.) against a **manually edited** OEPS `highlight_ids`. Marynia likes the concept; keep it on a **Discovery branch** (alpha, colorblind contrast, temporal slider). Do not treat that demo as a reason for Lambda to emit mixed-level IDs from one CSV. Lambda still: **one** `spatial_level` per Generate. Until the branch ships, mixed-level `highlight_ids` will not all render.
 
 ---
 
@@ -188,10 +190,24 @@ Related sibling repos (not this pipeline): `sdohplace-data-discovery`, `sdohplac
 
 ---
 
+## Slack follow-ups (do not rewrite Lambda v1 from these)
+
+**S3 keys (Pengyin reconfirm).** Folder form `uploads/{record_id}/{timestamp}/{filename}` + sibling `result.json` is what the manager will poll. One job = one directory; several jobs can exist at once. PutObject on the uploads bucket is already granted.
+
+**Discovery multi-scale colors (Pengyin + Marynia).** Frontend-only. Pengyin keeps the branch until this pipeline has processed existing data. Marynia: more testing (line alpha, colorblind, temporal slider / Big Ten portal). Lambda still one `spatial_level` per Generate.
+
+**Vintage tiles vs this Lambda.** Discovery currently pins 2018 pmtiles; the time slider does not swap boundaries. Marynia: 2018 is not accurate for most data; new vintage pmtiles (and later slider assets) are the product direction. Pengyin: a vintage metadata field is needed because `highlight_id` cannot tell 2010 from 2018 — **v2 / Discovery**. This repo still returns 2010 geometry from 2010 shapefiles and empty `highlight_ids` until those tiles exist.
+
+**Bring-your-own boundaries (Marynia).** Preferred path: curator/contributor supplies Census or custom polygons (`upload_kind: geo`); Lambda uses that geometry. Merge to HEROP `oeps/` **only** when the file is CSV-only, with explicit vintage + level. RAs re-gathering assets this semester = more Generate inputs, not a new pipeline. Map search comes from `locn_geometry`. Show coverage for custom polygons is still a Discovery gap (HEROP `highlight_ids` + 2018 tiles). Do not join geo uploads onto HEROP just to fill `highlight_ids`.
+
+---
+
 ## v1 out of scope (tiny but easy to accidentally build)
 
 - GeoPackage / file gdb / KML (geo path is zip shapefile or GeoJSON only)
 - 2010→2018 ID crosswalk
+- Spatial-joining geo uploads onto HEROP units so custom polygons get `highlight_ids`
+- Publishing pmtiles (geodata / Discovery; Marynia wants vintage tiles, not this repo)
 - Census Place (CDP) intersect for `dct_spatial_sm`
 - Raster dissolve (NLCD, 30m canopy) — envelope only if in scope at all
 - Mixed spatial levels in one CSV
@@ -223,4 +239,4 @@ Not a frozen enum, but use these so manager and Lambda match:
 
 ## Do not treat these as frozen
 
-v1 defaults are in [pipeline-contract.md](pipeline-contract.md) §8 (Pengyin Aug 2026). Marynia asked to prototype now and refine in September/October with Mallikarjun (edge cases / full dataset runs) and a GRA (research + later v2). Census Place and 2010 pmtiles stay post-v1.
+v1 defaults are in [pipeline-contract.md](pipeline-contract.md) §8 (Pengyin Aug 2026, plus Marynia BYO-boundaries / vintage-tile notes). Marynia asked to prototype now and refine in September/October with Mallikarjun (edge cases / full dataset runs) and a GRA (research + later v2). Census Place and vintage pmtiles stay outside this Lambda.

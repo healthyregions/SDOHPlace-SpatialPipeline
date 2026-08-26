@@ -71,7 +71,7 @@ uploads/herop-rsulgs/20260820T143022Z/dose_sys_counties.csv
 uploads/herop-rsulgs/20260820T143022Z/result.json
 ```
 
-`timestamp` is UTC `YYYYMMDDTHHMMSSZ`. One Generate click = one job folder. Confirmed with Pengyin (Aug 2026). Multiple jobs can run at once; each has its own `{timestamp}` directory.
+`timestamp` is UTC `YYYYMMDDTHHMMSSZ`. One Generate click = one job folder. Confirmed with Pengyin (Aug 2026, including a later Slack reconfirm). Multiple jobs can run at once; each has its own `{timestamp}` directory. Lambda PutObject is only `*/result.json` in that folder.
 
 ---
 
@@ -173,7 +173,7 @@ No `derived` wrapper. Field ids already match the manager.
 
 ### CSV path
 
-Port/extend ID-join logic from Metadata Manager `manager/coverage/coverage.py` (do not import that package).
+Port/extend ID-join logic from Metadata Manager `manager/coverage/coverage.py` (do not import that package). Use this path when the upload is **CSV-only** (no contributor shapefile). The curator must pass `boundary_year` and `spatial_level`.
 
 1. Read CSV from S3.
 2. Normalize IDs (zfill, FIPS vs `HEROP_ID`).
@@ -197,9 +197,11 @@ When porting `coverage.py`: enum `blockgroup` ≠ map key `bg` (KeyError). Lambd
 
 **Time budget:** still time real files. Async avoids the 30s HTTP kill, but Lambda max is 15 minutes; tract-national dissolve can still fail. Plan a container image (geopandas/GDAL), not a zip.
 
-### Geo path
+### Geo path (preferred when the user has boundaries)
 
-Read zip shapefile or GeoJSON → reproject EPSG:4326 → simplify → same output fields. `highlight_ids` for geo uploads may need a spatial join onto 2018 HEROP units; if that is not ready, return `[]` + warning rather than inventing IDs.
+Marynia (Aug 2026): users should **bring their own Census / custom boundaries**, not always merge onto HEROP `oeps/` assets. Counties split (e.g. NYC) and vintages change; HEROP tiles will lag. **Only merge to HEROP when the upload is CSV-only**, and the curator must specify `boundary_year` + `spatial_level`.
+
+Read zip shapefile or GeoJSON → reproject EPSG:4326 → simplify → WKT / envelope / centroid from **that** geometry. Do **not** spatial-join geo uploads onto HEROP units in v1. `highlight_ids` and `spatial_coverage` stay `[]` + a warning: Show coverage today paints HEROP 2018 pmtiles, not arbitrary polygons. Map search still works via `locn_geometry`.
 
 ### Vintages (v1)
 
@@ -215,12 +217,16 @@ v1 (Pengyin, Aug 2026):
 | 2018 | 2018 `oeps/` shapefiles | full ID-join list |
 | 2010 | **2010** `oeps/` shapefiles | `[]` + warning that tiles are 2018-only |
 
-Map search still uses `locn_geometry` (2010 outline is findable). Show coverage is empty for 2010. This is **not** 2010 IDs on 2018 boundaries. No 2010→2018 crosswalk in v1. 2010 pmtiles can wait.
+Map search still uses `locn_geometry` (2010 outline is findable). Show coverage is empty for 2010. This is **not** 2010 IDs on 2018 boundaries. No 2010→2018 crosswalk in v1.
+
+**Product direction vs v1 constraint:** Marynia wants vintage-correct tiles (2018 is not accurate for most data) and, later, temporal-slider assets. Pengyin: new pmtiles plus a vintage field (because `highlight_id` cannot distinguish 2010 vs 2018) is **discovery / v2**, not this Lambda. This repo still does **not** build pmtiles. Until those tiles exist, keep 2010 `highlight_ids` empty rather than painting 2010 units on 2018 boundaries.
 
 ### Out of scope (v1)
 
 - Raster (NLCD, 30m canopy) — envelope only, not this dissolve pipeline (confirm Marynia).
 - Census Place intersect for `spatial_coverage`.
+- Spatial-joining a geo upload onto HEROP `oeps/` so Show coverage can paint custom polygons on 2018 tiles.
+- Building or publishing pmtiles (that is `herop-geodata` / Discovery).
 - Lambda importing the Flask app. Tiny shared package or duplicated bbox/centroid formatting with the same fixtures. Manager may recompute bbox/centroid if a curator hand-edits geometry.
 
 ---
@@ -247,11 +253,12 @@ Still needed:
 Marynia asked for a prototype first. Pengyin filled manager/frontend implications. Adjust after real data + Mallikarjun / GRA.
 
 1. **`spatial_coverage` grain** — unique state names + `United States` / `Contiguous US` when national / CONUS. Census Places after v1. `dct_spatial_sm` is not a live discovery facet today (not keyword; map search uses `locn_geometry`).
-2. **Vintage / tiles** — 2010 **geometry** from 2010 `oeps/` (map search works). `highlight_ids` `[]` so Show coverage is blank (2018 pmtiles only).
-3. **Multi-resolution records** — one Generate = one `spatial_level`. Multi-resolution on the record is Filter-only today; it does not drive the map. Default is fine for v1.
+2. **Vintage / tiles** — 2010 **geometry** from 2010 `oeps/` (map search works). `highlight_ids` `[]` so Show coverage is blank (discovery tiles are 2018-only today). Marynia wants new vintage pmtiles as the real fix; that is **not** this Lambda. Do not put 2010 IDs on 2018 tiles.
+3. **Multi-resolution records** — one Generate = one `spatial_level`. Mixed county+tract in one CSV still fails. Pengyin’s multi-color Show coverage demo (OEPS county+tract) stays on a **Discovery branch** until pipeline output exists; Marynia likes the concept, wants more testing (alpha, colorblind, temporal slider). Not Lambda work.
 4. **Raster** — out of this dissolve pipeline. Bbox / envelope (or the same default other map search tools use). Frontend unchanged.
 5. **Test files** — download via [search.sdohplace.org](https://search.sdohplace.org) **Go to Resource**. Pengyin: test **OEPS** datasets first (known correct answers). Then more files / edge cases with Mallikarjun.
 6. **Manager write policy** — **no hard refuse**. Warning if `match_rate` **< 0.9**; curator decides. Lambda still `ok: true` on partial match. Tune later.
+7. **BYO boundaries vs CSV merge** — geo upload = use the file’s geometry (no HEROP join). CSV-only = join the specified `oeps/` vintage/level. RAs will re-gather spatial assets this semester; those files are new **inputs** to this same pipeline, not a new architecture. Each asset should get map-search geometry; Show coverage for custom polygons waits on discovery/tiles.
 
 ---
 
