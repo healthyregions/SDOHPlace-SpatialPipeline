@@ -6,6 +6,7 @@ from sdohplace_spatial.csv_join import derive_csv
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.highlight import encode_highlight_ids
 from sdohplace_spatial.handler import lambda_handler
+from sdohplace_spatial.levels import shapefile_url
 from tests.test_handler import FakeS3
 
 BOXES = {
@@ -100,7 +101,7 @@ def test_csv_blockgroup_alias_is_bg():
 
 
 def test_handler_csv_uses_injected_master(monkeypatch):
-    monkeypatch.setattr("sdohplace_spatial.csv_join.load_oeps_2018", lambda level: master_counties())
+    monkeypatch.setattr("sdohplace_spatial.csv_join.load_oeps", lambda level, year: master_counties())
     s3 = FakeS3()
     key = "uploads/herop-rsulgs/20260820T143022Z/dose.csv"
     s3.put_object(Bucket="herop-sdohplace-upload", Key=key, Body=_csv("FIPS\n17019\n17031\n"))
@@ -116,3 +117,49 @@ def test_handler_csv_uses_injected_master(monkeypatch):
     assert out["diagnostics"]["matched"] == 2
     stored = s3.objects[("herop-sdohplace-upload", "uploads/herop-rsulgs/20260820T143022Z/result.json")]
     assert b"not_implemented" not in stored["Body"]
+
+
+def test_shapefile_url_2010_county():
+    assert shapefile_url("county", 2010).endswith("oeps/county-2010-500k-shp.zip")
+
+
+def test_csv_2010_geometry_empty_highlight_ids():
+    raw = _csv("FIPS\n17019\n17031\n")
+    out = derive_csv(
+        raw,
+        {"spatial_level": "county", "boundary_year": 2010},
+        master_gdf=master_counties(),
+    )
+    assert out["ok"] is True
+    assert out["highlight_ids"] == []
+    assert out["diagnostics"]["boundary_year_used"] == 2010
+    assert any("2018-only" in w for w in out["diagnostics"]["warnings"])
+    assert "POLYGON" in out["geometry"] or "MULTIPOLYGON" in out["geometry"]
+
+
+def test_csv_unsupported_vintage():
+    raw = _csv("FIPS\n17019\n")
+    with pytest.raises(PipelineError) as exc:
+        derive_csv(raw, {"spatial_level": "county", "boundary_year": 2020}, master_gdf=master_counties())
+    assert exc.value.error_code == "unsupported_vintage"
+
+
+def test_handler_csv_2010_uses_injected_master(monkeypatch):
+    monkeypatch.setattr(
+        "sdohplace_spatial.csv_join.load_oeps",
+        lambda level, year: master_counties(),
+    )
+    s3 = FakeS3()
+    key = "uploads/herop-rsulgs/20260820T143022Z/dose.csv"
+    s3.put_object(Bucket="herop-sdohplace-upload", Key=key, Body=_csv("FIPS\n17019\n"))
+    event = {
+        "record_id": "herop-rsulgs",
+        "s3_key": key,
+        "upload_kind": "csv",
+        "spatial_level": "county",
+        "boundary_year": 2010,
+    }
+    out = lambda_handler(event, None, s3_client=s3)
+    assert out["ok"] is True
+    assert out["highlight_ids"] == []
+    assert out["diagnostics"]["boundary_year_used"] == 2010

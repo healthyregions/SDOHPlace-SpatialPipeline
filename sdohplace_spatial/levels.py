@@ -2,35 +2,39 @@
 
 from sdohplace_spatial.errors import PipelineError
 
+OEPS_SHP_TEMPLATE = (
+    "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/{level}-{year}-500k-shp.zip"
+)
+SUPPORTED_BOUNDARY_YEARS = (2010, 2018)
+
 LEVELS = {
     "state": {
         "prefix": "040US",
         "id_length": 2,
-        "shp_url": "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/state-2018-500k-shp.zip",
     },
     "county": {
         "prefix": "050US",
         "id_length": 5,
-        "shp_url": "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/county-2018-500k-shp.zip",
     },
     "tract": {
         "prefix": "140US",
         "id_length": 11,
-        "shp_url": "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/tract-2018-500k-shp.zip",
     },
     "bg": {
         "prefix": "150US",
         "id_length": 12,
-        "shp_url": "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/bg-2018-500k-shp.zip",
     },
     "zcta": {
         "prefix": "860US",
         "id_length": 5,
-        "shp_url": "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/zcta-2018-500k-shp.zip",
     },
 }
 
 CENSUS_LENGTHS = {2, 5, 11, 12}
+
+
+def shapefile_url(spatial_level: str, year: int) -> str:
+    return OEPS_SHP_TEMPLATE.format(level=spatial_level, year=year)
 
 
 def normalize_spatial_level(spatial_level: str | None) -> str:

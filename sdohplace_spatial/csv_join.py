@@ -1,4 +1,4 @@
-"""CSV ID join against 2018 HEROP oeps shapefiles. No Flask import."""
+"""CSV ID join against US Census vintage shapefiles under oeps/. No Flask import."""
 
 from __future__ import annotations
 
@@ -12,33 +12,46 @@ from sdohplace_spatial.aardvark import centroid_lat_lon, envelope
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.highlight import encode_highlight_ids
 from sdohplace_spatial.ids import geoids_from_series, pick_id_column, reject_mixed_levels
-from sdohplace_spatial.levels import LEVELS, normalize_spatial_level
+from sdohplace_spatial.levels import (
+    LEVELS,
+    SUPPORTED_BOUNDARY_YEARS,
+    normalize_spatial_level,
+    shapefile_url,
+)
 from sdohplace_spatial.outline import outline_from_gdf
 
 COVERAGE_WARNING = (
     "spatial_coverage is empty pending product grain (state names); "
     "not derived from place-name matching"
 )
+HIGHLIGHT_2010_WARNING = (
+    "highlight_ids is empty because discovery tiles are 2018-only; "
+    "2010 geometry is still returned for map search"
+)
 UNMATCHED_SAMPLE = 10
 
 
-def load_oeps_2018(spatial_level: str) -> gpd.GeoDataFrame:
-    url = LEVELS[spatial_level]["shp_url"]
+def load_oeps(spatial_level: str, year: int) -> gpd.GeoDataFrame:
+    url = shapefile_url(spatial_level, year)
     try:
         gdf = gpd.read_file(url)
     except Exception as exc:
         raise PipelineError(
             "unreadable_file",
-            f"Could not read 2018 {spatial_level} boundaries from oeps/: {exc}",
+            f"Could not read {year} {spatial_level} boundaries from oeps/: {exc}",
         ) from exc
     if "HEROP_ID" not in gdf.columns:
         raise PipelineError(
             "unreadable_file",
-            f"2018 {spatial_level} shapefile has no HEROP_ID column.",
+            f"{year} {spatial_level} shapefile has no HEROP_ID column.",
         )
     gdf = gdf.copy()
     gdf["HEROP_ID"] = gdf["HEROP_ID"].astype(str)
     return gdf
+
+
+def load_oeps_2018(spatial_level: str) -> gpd.GeoDataFrame:
+    return load_oeps(spatial_level, 2018)
 
 
 def derive_csv(
@@ -51,10 +64,10 @@ def derive_csv(
         year = int(year)
     except (TypeError, ValueError):
         year = 2018
-    if year != 2018:
+    if year not in SUPPORTED_BOUNDARY_YEARS:
         raise PipelineError(
-            "not_implemented",
-            "CSV join for boundary_year other than 2018 is not implemented yet (see #9).",
+            "unsupported_vintage",
+            f"CSV join supports boundary_year 2010 or 2018, not {year}.",
         )
 
     spatial_level = normalize_spatial_level(event.get("spatial_level"))
@@ -76,7 +89,7 @@ def derive_csv(
     df["_hid"] = prefix + df["_geoid"]
     df.loc[df["_geoid"] == "", "_hid"] = ""
 
-    master = master_gdf if master_gdf is not None else load_oeps_2018(spatial_level)
+    master = master_gdf if master_gdf is not None else load_oeps(spatial_level, year)
     master = master.copy()
     master["HEROP_ID"] = master["HEROP_ID"].astype(str)
     master_ids = master["HEROP_ID"].tolist()
@@ -91,7 +104,7 @@ def derive_csv(
     if matched_count == 0:
         raise PipelineError(
             "no_matching_ids",
-            f"None of the {rows_in} values in column '{column}' matched {spatial_level} boundaries for 2018.",
+            f"None of the {rows_in} values in column '{column}' matched {spatial_level} boundaries for {year}.",
         )
 
     matched_ids = set(df.loc[row_ok, "_hid"])
@@ -102,9 +115,14 @@ def derive_csv(
     c = geom.centroid
 
     warnings = [COVERAGE_WARNING]
+    if year == 2018:
+        highlight_ids = encode_highlight_ids(prefix, master_ids, matched_ids)
+    else:
+        highlight_ids = []
+        warnings.append(HIGHLIGHT_2010_WARNING)
     if unmatched_count:
         warnings.append(
-            f"{unmatched_count} IDs did not match the 2018 {spatial_level} boundary vintage"
+            f"{unmatched_count} IDs did not match the {year} {spatial_level} boundary vintage"
         )
 
     return {
@@ -113,14 +131,14 @@ def derive_csv(
         "bounding_box": envelope(minx, maxx, maxy, miny),
         "centroid": centroid_lat_lon(c.x, c.y),
         "spatial_coverage": [],
-        "highlight_ids": encode_highlight_ids(prefix, master_ids, matched_ids),
+        "highlight_ids": highlight_ids,
         "diagnostics": {
             "rows_in": rows_in,
             "matched": matched_count,
             "unmatched": unmatched_count,
             "unmatched_sample": unmatched_sample,
             "match_rate": matched_count / rows_in,
-            "boundary_year_used": 2018,
+            "boundary_year_used": year,
             "warnings": warnings,
         },
     }
