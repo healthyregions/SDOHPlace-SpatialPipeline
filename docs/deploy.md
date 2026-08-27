@@ -48,6 +48,6 @@ Use a dummy invoke that does **not** need a real upload file (unknown `upload_ki
 aws lambda invoke --region us-east-2 --function-name herop-sdohplace-spatial --invocation-type Event --payload file://examples/invoke-payload.json out.json
 ```
 
-`InvocationType=Event` is what the manager will use. Put a placeholder object at the payload `s3_key` first, or the stub path still writes `result.json` next to that key. Check the job folder for `result.json`.
+`InvocationType=Event` is what the manager will use. Put a placeholder object at the payload `s3_key` first, or a missing file writes `unreadable_file` in `result.json`. Check the job folder for `result.json`. On Windows AWS CLI v2, add `--cli-binary-format raw-in-base64-out` to `--payload file://...`.
 
-Then ping Pengyin for [#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11) (`lambda:InvokeFunction` on the EC2 instance role).
+EC2 role `SDOHPlaceManagerRole` already has `lambda:InvokeFunction` on this function ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11)).

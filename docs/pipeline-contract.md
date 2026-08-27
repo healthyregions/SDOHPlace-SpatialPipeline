@@ -238,13 +238,15 @@ Yong owns Lambda IAM + deploys. Pengyin created the uploads bucket **`herop-sdoh
 In place:
 
 - Yong console user (`ywkim@illinois.edu`)
-- Execution role `herop-sdohplace-spatial-role`: trust `lambda.amazonaws.com`; inline S3 GetObject on the bucket / PutObject on `*/result.json`; `AWSLambdaBasicExecutionRole` for logs (`AWSLambdaExecute` removed)
+- Execution role `herop-sdohplace-spatial-role`: trust `lambda.amazonaws.com`; S3 ListBucket on the bucket, GetObject on objects, PutObject on `*/result.json`; `AWSLambdaBasicExecutionRole` for logs (`AWSLambdaExecute` removed)
 - `herop-geodata` public `GetObject` for `oeps/` (no extra IAM on the Lambda role for v1)
+- Function `herop-sdohplace-spatial` in `us-east-2` (container image)
+- EC2 instance role **`SDOHPlaceManagerRole`** (solr1): `lambda:InvokeFunction` on `herop-sdohplace-spatial` ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11))
 
 Still needed:
 
-- **EC2 instance role:** `lambda:InvokeFunction` on `herop-sdohplace-spatial` — Pengyin will add this when the function exists (ping her)
-- Confirm `iam:PassRole` on `herop-sdohplace-spatial-role` when creating the function
+- Shared bbox/centroid fixtures if the manager will recompute on hand-edit
+- Manager Generate button e2e against the live function
 
 ---
 
@@ -264,7 +266,7 @@ Marynia asked for a prototype first. Pengyin filled manager/frontend implication
 
 ## 9. Still needed from Pengyin
 
-- `lambda:InvokeFunction` on the EC2 role after the function exists (#11).
+- Manager Generate button e2e (async invoke + poll `result.json`) now that #11 is on `SDOHPlaceManagerRole`.
 - Shared bbox/centroid fixtures if the manager will recompute on hand-edit.
 
 ---

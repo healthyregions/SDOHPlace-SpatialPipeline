@@ -26,8 +26,8 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 
 ### AWS (not code)
 
-- Execution role `herop-sdohplace-spatial-role` (Lambda trust, scoped S3, CloudWatch logs). `AWSLambdaExecute` removed.
-- EC2 `lambda:InvokeFunction` still waits until function `herop-sdohplace-spatial` exists ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11)).
+- Execution role `herop-sdohplace-spatial-role` (Lambda trust, scoped S3 including ListBucket on the bucket ARN, CloudWatch logs). `AWSLambdaExecute` removed. Function `herop-sdohplace-spatial` is live in `us-east-2`.
+- EC2 role `SDOHPlaceManagerRole` (solr1) has `lambda:InvokeFunction` on `herop-sdohplace-spatial` ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11)).
 
 ## 0.0.1 — 2026-08-20
 
