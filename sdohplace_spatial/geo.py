@@ -22,8 +22,8 @@ HIGHLIGHT_WARNING = (
     "HEROP spatial join is not implemented yet"
 )
 COVERAGE_WARNING = (
-    "spatial_coverage is empty pending product grain (state names); "
-    "not derived from place-name matching"
+    "spatial_coverage is empty for geo uploads in this version; "
+    "state names come from CSV ID join, not from the file geometry"
 )
 
 

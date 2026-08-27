@@ -56,7 +56,7 @@ def test_csv_prefers_fips_and_partial_match():
     assert out["highlight_ids"] == ["-050US17043"]
     assert out["diagnostics"]["matched"] == 3
     assert out["diagnostics"]["unmatched"] == 0
-    assert out["spatial_coverage"] == []
+    assert out["spatial_coverage"] == ["Illinois"]
     assert "POLYGON" in out["geometry"] or "MULTIPOLYGON" in out["geometry"]
 
 
