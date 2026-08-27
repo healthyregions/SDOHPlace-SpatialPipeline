@@ -9,6 +9,7 @@ import geopandas as gpd
 import pandas as pd
 
 from sdohplace_spatial.aardvark import centroid_lat_lon, envelope
+from sdohplace_spatial.coverage_names import spatial_coverage_from_matches
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.highlight import encode_highlight_ids
 from sdohplace_spatial.ids import geoids_from_series, pick_id_column, reject_mixed_levels
@@ -20,9 +21,8 @@ from sdohplace_spatial.levels import (
 )
 from sdohplace_spatial.outline import outline_from_gdf
 
-COVERAGE_WARNING = (
-    "spatial_coverage is empty pending product grain (state names); "
-    "not derived from place-name matching"
+COVERAGE_EMPTY_WARNING = (
+    "spatial_coverage is empty; could not derive state names from matched HEROP IDs"
 )
 HIGHLIGHT_2010_WARNING = (
     "highlight_ids is empty because discovery tiles are 2018-only; "
@@ -114,7 +114,10 @@ def derive_csv(
     minx, miny, maxx, maxy = geom.bounds
     c = geom.centroid
 
-    warnings = [COVERAGE_WARNING]
+    coverage = spatial_coverage_from_matches(matched_ids, spatial_level, matched_gdf)
+    warnings: list[str] = []
+    if not coverage:
+        warnings.append(COVERAGE_EMPTY_WARNING)
     if year == 2018:
         highlight_ids = encode_highlight_ids(prefix, master_ids, matched_ids)
     else:
@@ -130,7 +133,7 @@ def derive_csv(
         "geometry": wkt,
         "bounding_box": envelope(minx, maxx, maxy, miny),
         "centroid": centroid_lat_lon(c.x, c.y),
-        "spatial_coverage": [],
+        "spatial_coverage": coverage,
         "highlight_ids": highlight_ids,
         "diagnostics": {
             "rows_in": rows_in,
