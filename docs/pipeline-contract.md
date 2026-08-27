@@ -53,7 +53,7 @@ Flow:
 | Region | `us-east-2` (same as `herop-geodata`) |
 | Public access | none |
 | IAM | execution role `herop-sdohplace-spatial-role` in place; EC2 `InvokeFunction` after the function exists |
-| HEROP boundaries | `herop-geodata` prefix `oeps/` — vintages **2010** and **2018** |
+| HEROP boundaries | `herop-geodata` prefix `oeps/` — **US Census** vintages **2010** and **2018** (same files OEPS uses; OEPS is a test dataset, not the boundary product name). Source library: [healthyregions/geodata](https://github.com/healthyregions/geodata). |
 
 **Keep-until-publish** (not delete-on-Lambda-return). Wipe Lambda `/tmp` after each run. Manager may delete the job folder after the curator publishes.
 
@@ -177,7 +177,7 @@ Port/extend ID-join logic from Metadata Manager `manager/coverage/coverage.py` (
 
 1. Read CSV from S3.
 2. Normalize IDs (zfill, FIPS vs `HEROP_ID`).
-3. Join HEROP `oeps/` shapefile for `{spatial_level}-{boundary_year}`.
+3. Join the **US Census** vintage shapefile for `{spatial_level}-{boundary_year}` (S3 prefix is still `oeps/`).
 4. Dissolve matched units → **simplify** → WKT.
 5. `bounding_box` / `centroid` from that outline.
 6. `highlight_ids` from the ID join (same include / exclude / `050US*` idea as `coverage.py`) — **not** from a spatial intersection. **2018 only** for a non-empty list (see vintages).
@@ -207,7 +207,7 @@ Read zip shapefile or GeoJSON → reproject EPSG:4326 → simplify → WKT / env
 
 Facts:
 
-- Merge shapefiles (`oeps/`): **2010 and 2018**.
+- CSV join files live under `oeps/` on `herop-geodata`: **2010 and 2018 US Census** vintages (Marynia: not “the OEPS vintage”; OEPS is an example dataset for testing).
 - Discovery app tiles: **2018 only** (`<level>-2018.pmtiles`). 2010 `highlight_ids` would paint a **blank** Show coverage map.
 
 v1 (Pengyin, Aug 2026):
@@ -258,7 +258,7 @@ Marynia asked for a prototype first. Pengyin filled manager/frontend implication
 4. **Raster** — out of this dissolve pipeline. Bbox / envelope (or the same default other map search tools use). Frontend unchanged.
 5. **Test files** — download via [search.sdohplace.org](https://search.sdohplace.org) **Go to Resource**. Pengyin: test **OEPS** datasets first (known correct answers). Then more files / edge cases with Mallikarjun.
 6. **Manager write policy** — **no hard refuse**. Warning if `match_rate` **< 0.9**; curator decides. Lambda still `ok: true` on partial match. Tune later.
-7. **BYO boundaries vs CSV merge** — geo upload = use the file’s geometry (no HEROP join). CSV-only = join the specified `oeps/` vintage/level. RAs will re-gather spatial assets this semester; those files are new **inputs** to this same pipeline, not a new architecture. Each asset should get map-search geometry; Show coverage for custom polygons waits on discovery/tiles.
+7. **BYO boundaries vs CSV merge** — geo upload = use the file’s geometry (no HEROP join). CSV-only = join the specified **US Census** vintage/level (`oeps/` on S3). RAs will re-gather spatial assets this semester; those files are new **inputs** to this same pipeline, not a new architecture. Each asset should get map-search geometry; Show coverage for custom polygons waits on discovery/tiles.
 
 ---
 

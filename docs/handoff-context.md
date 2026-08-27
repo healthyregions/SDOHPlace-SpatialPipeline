@@ -198,7 +198,11 @@ Related sibling repos (not this pipeline): `sdohplace-data-discovery`, `sdohplac
 
 **Vintage tiles vs this Lambda.** Discovery currently pins 2018 pmtiles; the time slider does not swap boundaries. Marynia: 2018 is not accurate for most data; new vintage pmtiles (and later slider assets) are the product direction. Pengyin: a vintage metadata field is needed because `highlight_id` cannot tell 2010 from 2018 — **v2 / Discovery**. This repo still returns 2010 geometry from 2010 shapefiles and empty `highlight_ids` until those tiles exist.
 
-**Bring-your-own boundaries (Marynia).** Preferred path: curator/contributor supplies Census or custom polygons (`upload_kind: geo`); Lambda uses that geometry. Merge to HEROP `oeps/` **only** when the file is CSV-only, with explicit vintage + level. RAs re-gathering assets this semester = more Generate inputs, not a new pipeline. Map search comes from `locn_geometry`. Show coverage for custom polygons is still a Discovery gap (HEROP `highlight_ids` + 2018 tiles). Do not join geo uploads onto HEROP just to fill `highlight_ids`.
+**Pengyin v1/v2 table (Aug 2026).** She asked to align, then said Yong’s BYO / result.json / no-v2-now reading was what she needed. V2 pmtiles stay a future record, not current work. One leftover sentence in her Show coverage row still says Lambda may emit `highlight_ids` for “geographic data matching 2018 units”; v1 geo path does **not** do that join. CSV `boundary_year=2018` is the 2018 highlight_ids case.
+
+**Census vintage, not “OEPS vintage” (Marynia).** CSV join is to **US Census** vintages in [healthyregions/geodata](https://github.com/healthyregions/geodata) (the same files OEPS uses). `oeps/` is only the S3 prefix. OEPS is an example dataset for testing.
+
+**Bring-your-own boundaries (Marynia).** Preferred path: curator/contributor supplies Census or custom polygons (`upload_kind: geo`); Lambda uses that geometry. Merge to the Census vintage library **only** when the file is CSV-only, with explicit `boundary_year` + `spatial_level`. RAs re-gathering assets this semester = more Generate inputs, not a new pipeline. Map search comes from `locn_geometry`. Show coverage for custom polygons is still a Discovery gap (HEROP `highlight_ids` + 2018 tiles). Do not join geo uploads onto HEROP just to fill `highlight_ids`.
 
 ---
 
