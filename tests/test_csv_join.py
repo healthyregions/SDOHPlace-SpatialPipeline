@@ -60,6 +60,20 @@ def test_csv_prefers_fips_and_partial_match():
     assert "POLYGON" in out["geometry"] or "MULTIPOLYGON" in out["geometry"]
 
 
+def test_csv_zfill_restores_leading_zeros():
+    """Excel/int FIPS: CA 06037 → 6037, AL 01001 → 1001. Join is still string HEROP_ID."""
+    master = gpd.GeoDataFrame(
+        {"HEROP_ID": ["050US06037", "050US01001"]},
+        geometry=[BOXES["050US17019"], BOXES["050US17031"]],
+        crs="EPSG:4326",
+    )
+    raw = _csv("FIPS\n6037\n1001\n6037.0\n")
+    out = derive_csv(raw, {"spatial_level": "county"}, master_gdf=master)
+    assert out["ok"] is True
+    assert out["diagnostics"]["matched"] == 3
+    assert out["spatial_coverage"] == ["Alabama", "California"]
+
+
 def test_csv_zero_matches():
     raw = _csv("FIPS\n99999\n")
     with pytest.raises(PipelineError) as exc:
