@@ -45,6 +45,8 @@ def pick_id_column(columns: list[str], geo_id_column: str | None) -> str:
 
 
 def geoids_from_series(values, id_length: int) -> list[str]:
+    # Excel/pandas may have stripped leading zeros (06037 → 6037). Pad back
+    # before prefix + FIPS == HEROP_ID. Join key stays a string, never int.
     return [extract_geoid(v).zfill(id_length) if extract_geoid(v) else "" for v in values]
 
 
