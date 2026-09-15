@@ -152,6 +152,7 @@ Aardvark / OGM formats. Coordinate order is a trap: WKT is lon-lat; centroid is 
 `ok: false` only for:
 
 - unreadable file
+- missing Census vintage shapefile for the chosen level + year (`missing_boundaries`)
 - no usable ID column
 - **zero** matches
 - empty geometry

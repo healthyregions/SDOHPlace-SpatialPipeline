@@ -31,11 +31,43 @@ HIGHLIGHT_2010_WARNING = (
 UNMATCHED_SAMPLE = 10
 
 
+def _is_missing_boundary_http(exc: BaseException) -> bool:
+    code = getattr(exc, "code", None) or getattr(exc, "status", None)
+    if code in (403, 404):
+        return True
+    text = str(exc).upper()
+    return "403" in text or "404" in text or "FORBIDDEN" in text or "NOT FOUND" in text
+
+
+_LEVEL_LABELS = {
+    "state": "state",
+    "county": "county",
+    "tract": "tract",
+    "bg": "block group",
+    "zcta": "ZCTA",
+}
+
+
+def missing_boundaries_message(spatial_level: str, year: int) -> str:
+    if spatial_level == "zcta" and year == 2010:
+        return (
+            "2010 ZCTA boundaries aren’t in the library; use 2018 for ZCTA "
+            "(including zcta-ruca-2010.csv)."
+        )
+    label = _LEVEL_LABELS.get(spatial_level, spatial_level)
+    return f"{year} {label} boundaries aren’t in the library."
+
+
 def load_oeps(spatial_level: str, year: int) -> gpd.GeoDataFrame:
     url = shapefile_url(spatial_level, year)
     try:
         gdf = gpd.read_file(url)
     except Exception as exc:
+        if _is_missing_boundary_http(exc):
+            raise PipelineError(
+                "missing_boundaries",
+                missing_boundaries_message(spatial_level, year),
+            ) from exc
         raise PipelineError(
             "unreadable_file",
             f"Could not read {year} {spatial_level} boundaries from oeps/: {exc}",

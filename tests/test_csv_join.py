@@ -2,7 +2,11 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 import pytest
 
-from sdohplace_spatial.csv_join import derive_csv
+from sdohplace_spatial.csv_join import (
+    derive_csv,
+    load_oeps,
+    missing_boundaries_message,
+)
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.highlight import encode_highlight_ids
 from sdohplace_spatial.handler import lambda_handler
@@ -149,6 +153,32 @@ def test_csv_2010_geometry_empty_highlight_ids():
     assert out["diagnostics"]["boundary_year_used"] == 2010
     assert any("2018-only" in w for w in out["diagnostics"]["warnings"])
     assert "POLYGON" in out["geometry"] or "MULTIPOLYGON" in out["geometry"]
+
+
+def test_missing_boundaries_message_zcta_2010():
+    msg = missing_boundaries_message("zcta", 2010)
+    assert msg == (
+        "2010 ZCTA boundaries aren’t in the library; use 2018 for ZCTA "
+        "(including zcta-ruca-2010.csv)."
+    )
+
+
+def test_missing_boundaries_message_other_level():
+    assert missing_boundaries_message("bg", 2018) == (
+        "2018 block group boundaries aren’t in the library."
+    )
+
+
+def test_load_oeps_http_403_is_missing_boundaries(monkeypatch):
+    def boom(_url):
+        raise OSError("HTTP Error 403: Forbidden")
+
+    monkeypatch.setattr("sdohplace_spatial.csv_join.gpd.read_file", boom)
+    with pytest.raises(PipelineError) as exc:
+        load_oeps("zcta", 2010)
+    assert exc.value.error_code == "missing_boundaries"
+    assert "use 2018 for ZCTA" in exc.value.message
+    assert "403" not in exc.value.message
 
 
 def test_csv_unsupported_vintage():

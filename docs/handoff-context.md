@@ -231,6 +231,7 @@ Not a frozen enum, but use these so manager and Lambda match:
 | --- | --- |
 | `not_implemented` | Stub handler only; derivation not built yet. Manager can still poll `result.json`. |
 | `unreadable_file` | Cannot read CSV/zip/GeoJSON |
+| `missing_boundaries` | Chosen `{spatial_level}` + `{boundary_year}` shapefile is not in `oeps/` (HTTP 403/404). Curator-facing `message` (e.g. 2010 ZCTA → use 2018, including `zcta-ruca-2010.csv`). Manager may add “contact us”. |
 | `no_id_column` | No FIPS / GEOID / HEROP_ID / named column |
 | `no_matching_ids` | Zero IDs matched the chosen vintage/level |
 | `empty_geometry` | Dissolve produced nothing |
