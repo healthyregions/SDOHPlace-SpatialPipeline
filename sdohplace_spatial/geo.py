@@ -1,6 +1,6 @@
-"""upload_kind=geo: zip shapefile or GeoJSON → EPSG:4326 → simplify.
+"""upload_kind=geo: zip shapefile, GeoJSON, or GeoPackage → EPSG:4326 → simplify.
 
-No HEROP join. highlight_ids is [] plus a warning. No GeoPackage / gdb / KML.
+No HEROP join. highlight_ids is [] plus a warning. No file gdb / KML.
 """
 
 from __future__ import annotations
@@ -17,6 +17,9 @@ import geopandas as gpd
 from sdohplace_spatial.aardvark import centroid_lat_lon, envelope
 from sdohplace_spatial.errors import PipelineError
 from sdohplace_spatial.outline import GEOJSON_SUFFIXES, MAX_WKT_CHARS, outline_from_gdf
+
+GPKG_SUFFIX = ".gpkg"
+GEO_FILE_SUFFIXES = GEOJSON_SUFFIXES + (GPKG_SUFFIX,)
 HIGHLIGHT_WARNING = (
     "highlight_ids is empty for geo uploads in this version; "
     "HEROP spatial join is not implemented yet"
@@ -33,15 +36,16 @@ def _suffix(s3_key: str) -> str:
 
 def derive_geo(file_bytes: bytes, s3_key: str) -> dict[str, Any]:
     suffix = _suffix(s3_key)
-    if suffix in (".kml", ".kmz", ".gpkg", ".gdb"):
+    if suffix in (".kml", ".kmz", ".gdb"):
         raise PipelineError(
             "unreadable_file",
-            f"v1 geo path does not support '{suffix}'. Use a shapefile zip or GeoJSON.",
+            f"This version does not support '{suffix}'. "
+            "Use a shapefile zip, GeoJSON, or GeoPackage.",
         )
-    if suffix not in GEOJSON_SUFFIXES and suffix != ".zip":
+    if suffix not in GEO_FILE_SUFFIXES and suffix != ".zip":
         raise PipelineError(
             "unreadable_file",
-            f"Cannot read '{suffix}' as geo. Expected .geojson, .json, or .zip (shapefile).",
+            f"Cannot read '{suffix}' as geo. Expected .geojson, .json, .gpkg, or .zip (shapefile).",
         )
 
     tmp = tempfile.mkdtemp(prefix="sdoh-geo-")
@@ -78,8 +82,10 @@ def derive_geo(file_bytes: bytes, s3_key: str) -> dict[str, Any]:
 
 def _read_geodataframe(file_bytes: bytes, suffix: str, tmp: str) -> gpd.GeoDataFrame:
     try:
-        if suffix in GEOJSON_SUFFIXES:
-            path = os.path.join(tmp, "upload.geojson")
+        if suffix in GEOJSON_SUFFIXES or suffix == GPKG_SUFFIX:
+            path = os.path.join(
+                tmp, "upload.geojson" if suffix in GEOJSON_SUFFIXES else "upload.gpkg"
+            )
             with open(path, "wb") as handle:
                 handle.write(file_bytes)
             return gpd.read_file(path)

@@ -92,7 +92,7 @@ uploads/herop-rsulgs/20260820T143022Z/result.json
 | --- | --- |
 | `record_id` | Logging / correlation only. Lambda never writes the record. |
 | `s3_key` | Object in `herop-sdohplace-upload`. Derive the job folder from this key; write `result.json` next to the file. |
-| `upload_kind` | `csv` or `geo`. `geo` = zip (shapefile sidecars) or a single GeoJSON. |
+| `upload_kind` | `csv` or `geo`. `geo` = zip (shapefile sidecars), a single GeoJSON, or a GeoPackage (`.gpkg`). File gdb / KML still rejected. |
 | `boundary_year` | CSV path only. v1: `2010` or `2018`. |
 | `spatial_level` | CSV path only. `state` \| `county` \| `tract` \| `bg` \| `zcta`. Manager maps schema labels (`"County"`, `"Census Tract"`, …) **before** invoke. |
 | `geo_id_column` | CSV path only. Lambda auto-detects FIPS / GEOID / `HEROP_ID` / stripped leading zeros; ask the curator only if detection fails. |
@@ -202,7 +202,7 @@ When porting `coverage.py`: enum `blockgroup` ≠ map key `bg` (KeyError). Lambd
 
 Marynia (Aug 2026): users should **bring their own Census / custom boundaries**, not always merge onto HEROP `oeps/` assets. Counties split (e.g. NYC) and vintages change; HEROP tiles will lag. **Only merge to HEROP when the upload is CSV-only**, and the curator must specify `boundary_year` + `spatial_level`.
 
-Read zip shapefile or GeoJSON → reproject EPSG:4326 → simplify → WKT / envelope / centroid from **that** geometry. Do **not** spatial-join geo uploads onto HEROP units in v1. `highlight_ids` and `spatial_coverage` stay `[]` + a warning: Show coverage today paints HEROP 2018 pmtiles, not arbitrary polygons. Map search still works via `locn_geometry`.
+Read zip shapefile, GeoJSON, or GeoPackage → reproject EPSG:4326 → simplify → WKT / envelope / centroid from **that** geometry. Do **not** spatial-join geo uploads onto HEROP units in v1. `highlight_ids` and `spatial_coverage` stay `[]` + a warning: Show coverage today paints HEROP 2018 pmtiles, not arbitrary polygons. Map search still works via `locn_geometry`.
 
 ### Vintages (v1)
 
@@ -262,6 +262,7 @@ Marynia asked for a prototype first. Pengyin filled manager/frontend implication
 5. **Test files** — download via [search.sdohplace.org](https://search.sdohplace.org) **Go to Resource**. Pengyin: test **OEPS** datasets first (known correct answers). Then more files / edge cases with Mallikarjun.
 6. **Manager write policy** — **no hard refuse**. Warning if `match_rate` **< 0.9**; curator decides. Lambda still `ok: true` on partial match. Tune later.
 7. **BYO boundaries vs CSV merge** — geo upload = use the file’s geometry (no HEROP join). CSV-only = join the specified **US Census** vintage/level (`oeps/` on S3). RAs will re-gather spatial assets this semester; those files are new **inputs** to this same pipeline, not a new architecture. Each asset should get map-search geometry; Show coverage for custom polygons waits on discovery/tiles.
+8. **Geo formats (Marynia Sept 2026)** — shapefile, GeoJSON, GeoPackage. Points already in those files go through `upload_kind: geo`. Geocoding is out of scope. CSV lat/long columns = October extension.
 
 ---
 

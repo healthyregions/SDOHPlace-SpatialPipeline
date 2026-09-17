@@ -49,11 +49,6 @@ _LEVEL_LABELS = {
 
 
 def missing_boundaries_message(spatial_level: str, year: int) -> str:
-    if spatial_level == "zcta" and year == 2010:
-        return (
-            "2010 ZCTA boundaries aren’t in the library; use 2018 for ZCTA "
-            "(including zcta-ruca-2010.csv)."
-        )
     label = _LEVEL_LABELS.get(spatial_level, spatial_level)
     return f"{year} {label} boundaries aren’t in the library."
 

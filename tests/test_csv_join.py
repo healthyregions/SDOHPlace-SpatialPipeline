@@ -156,10 +156,8 @@ def test_csv_2010_geometry_empty_highlight_ids():
 
 
 def test_missing_boundaries_message_zcta_2010():
-    msg = missing_boundaries_message("zcta", 2010)
-    assert msg == (
-        "2010 ZCTA boundaries aren’t in the library; use 2018 for ZCTA "
-        "(including zcta-ruca-2010.csv)."
+    assert missing_boundaries_message("zcta", 2010) == (
+        "2010 ZCTA boundaries aren’t in the library."
     )
 
 
@@ -177,7 +175,7 @@ def test_load_oeps_http_403_is_missing_boundaries(monkeypatch):
     with pytest.raises(PipelineError) as exc:
         load_oeps("zcta", 2010)
     assert exc.value.error_code == "missing_boundaries"
-    assert "use 2018 for ZCTA" in exc.value.message
+    assert exc.value.message == "2010 ZCTA boundaries aren’t in the library."
     assert "403" not in exc.value.message
 
 

@@ -204,11 +204,15 @@ Related sibling repos (not this pipeline): `sdohplace-data-discovery`, `sdohplac
 
 **Bring-your-own boundaries (Marynia).** Preferred path: curator/contributor supplies Census or custom polygons (`upload_kind: geo`); Lambda uses that geometry. Merge to the Census vintage library **only** when the file is CSV-only, with explicit `boundary_year` + `spatial_level`. RAs re-gathering assets this semester = more Generate inputs, not a new pipeline. Map search comes from `locn_geometry`. Show coverage for custom polygons is still a Discovery gap (HEROP `highlight_ids` + 2018 tiles). Do not join geo uploads onto HEROP just to fill `highlight_ids`.
 
+**RA geo formats + points (Marynia, Sept 2026).** Majority of datasets: shapefile, GeoJSON, or GeoPackage (not CSV). Point features already in those files are covered by `upload_kind: geo`. **Geocoding is out of scope.** CSV with lat/long columns (Chicago crime-style) is a **new extension for October**, not this slice.
+
+**Missing 2010 layers (Marynia, Sept 2026).** RAs can add missing decennial vintages; 2010 should exist for every level. Lambda reads `oeps/{level}-{year}-500k-shp.zip` on `herop-geodata`. Once `zcta-2010` is there, the 403 / `missing_boundaries` case goes away with no code change. Do not work around a missing file by joining 2010 IDs onto 2018 units.
+
 ---
 
 ## v1 out of scope (tiny but easy to accidentally build)
 
-- GeoPackage / file gdb / KML (geo path is zip shapefile or GeoJSON only)
+- File gdb / KML (geo path is zip shapefile, GeoJSON, or GeoPackage)
 - 2010→2018 ID crosswalk
 - Spatial-joining geo uploads onto HEROP units so custom polygons get `highlight_ids`
 - Publishing pmtiles (geodata / Discovery; Marynia wants vintage tiles, not this repo)
@@ -219,6 +223,8 @@ Related sibling repos (not this pipeline): `sdohplace-data-discovery`, `sdohplac
 - Writing Solr or record JSON from Lambda
 - Raising gunicorn timeout instead of async
 - Place-name → geometry
+- Geocoding / address → coordinates
+- CSV lat/long column transform (October; points already in shapefile / GeoJSON / GeoPackage use the geo path)
 - A second GitHub repo for “shared spatial module” in v1
 
 ---
@@ -231,7 +237,7 @@ Not a frozen enum, but use these so manager and Lambda match:
 | --- | --- |
 | `not_implemented` | Stub handler only; derivation not built yet. Manager can still poll `result.json`. |
 | `unreadable_file` | Cannot read CSV/zip/GeoJSON |
-| `missing_boundaries` | Chosen `{spatial_level}` + `{boundary_year}` shapefile is not in `oeps/` (HTTP 403/404). Curator-facing `message` (e.g. 2010 ZCTA → use 2018, including `zcta-ruca-2010.csv`). Manager may add “contact us”. |
+| `missing_boundaries` | Chosen `{spatial_level}` + `{boundary_year}` shapefile is not in `oeps/` (HTTP 403/404). Curator-facing `message` like “2010 ZCTA boundaries aren’t in the library.” Manager may add “contact us”. Do not tell users to switch vintage; RAs add missing decennial files to `herop-geodata`. |
 | `no_id_column` | No FIPS / GEOID / HEROP_ID / named column |
 | `no_matching_ids` | Zero IDs matched the chosen vintage/level |
 | `empty_geometry` | Dissolve produced nothing |

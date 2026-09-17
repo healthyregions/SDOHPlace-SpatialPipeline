@@ -72,6 +72,20 @@ def test_geojson_success_no_highlight_ids():
     assert out["diagnostics"]["rows_in"] == 1
 
 
+def test_geopackage_success(tmp_path: Path):
+    gdf = geopandas.GeoDataFrame({"id": [1]}, geometry=[BOX], crs="EPSG:4326")
+    gpkg = tmp_path / "box.gpkg"
+    gdf.to_file(gpkg, driver="GPKG")
+    event = _geo_event("box.gpkg")
+    s3 = FakeS3()
+    s3.put_object(Bucket="herop-sdohplace-upload", Key=event["s3_key"], Body=gpkg.read_bytes())
+    out = lambda_handler(event, None, s3_client=s3)
+    assert out["ok"] is True
+    assert out["highlight_ids"] == []
+    assert out["spatial_coverage"] == []
+    assert "POLYGON" in out["geometry"] or "MULTIPOLYGON" in out["geometry"]
+
+
 def test_kml_is_rejected():
     s3 = FakeS3()
     event = _geo_event("box.kml")
