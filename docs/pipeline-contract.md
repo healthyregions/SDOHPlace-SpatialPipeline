@@ -50,10 +50,10 @@ Flow:
 | | |
 | --- | --- |
 | Uploads bucket | `herop-sdohplace-upload` |
-| Region | `us-east-2` (same as `herop-geodata`) |
+| Region | `us-east-2` (same as `oeps-geodata`) |
 | Public access | none |
 | IAM | execution role `herop-sdohplace-spatial-role` in place; EC2 `InvokeFunction` after the function exists |
-| HEROP boundaries | `herop-geodata` prefix `oeps/` — **US Census** vintages **2010** and **2018** (same files OEPS uses; OEPS is a test dataset, not the boundary product name). Source library: [healthyregions/geodata](https://github.com/healthyregions/geodata). |
+| HEROP boundaries | `oeps-geodata` prefix `oeps/` — **US Census** vintages **2010** and **2018** (same files OEPS uses; OEPS is a test dataset, not the boundary product name). Source library: [healthyregions/geodata](https://github.com/healthyregions/geodata). |
 
 **Keep-until-publish** (not delete-on-Lambda-return). Wipe Lambda `/tmp` after each run. Manager may delete the job folder after the curator publishes.
 
@@ -187,7 +187,7 @@ Port/extend ID-join logic from Metadata Manager `manager/coverage/coverage.py` (
 Existing `coverage.py` HEROP URLs (2018 examples):
 
 ```
-https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/county-2018-500k-shp.zip
+https://oeps-geodata.s3.us-east-2.amazonaws.com/oeps/county-2018-500k-shp.zip
 ```
 
 Levels: `state` `040US` (id len 2), `county` `050US` (5), `tract` `140US` (11), `bg` `150US` (12), `zcta` `860US` (5). Full HEROP_ID table and `highlight_ids` include/exclude/`*` rules: [handoff-context.md](handoff-context.md).
@@ -208,7 +208,7 @@ Read zip shapefile, GeoJSON, or GeoPackage → reproject EPSG:4326 → simplify 
 
 Facts:
 
-- CSV join files live under `oeps/` on `herop-geodata`: **2010 and 2018 US Census** vintages (Marynia: not “the OEPS vintage”; OEPS is an example dataset for testing).
+- CSV join files live under `oeps/` on `oeps-geodata`: **2010 and 2018 US Census** vintages (Marynia: not “the OEPS vintage”; OEPS is an example dataset for testing).
 - Discovery app tiles: **2018 only** (`<level>-2018.pmtiles`). 2010 `highlight_ids` would paint a **blank** Show coverage map.
 
 v1 (Pengyin, Aug 2026):
@@ -240,7 +240,7 @@ In place:
 
 - Yong console user (`ywkim@illinois.edu`)
 - Execution role `herop-sdohplace-spatial-role`: trust `lambda.amazonaws.com`; S3 ListBucket on the bucket, GetObject on objects, PutObject on `*/result.json`; `AWSLambdaBasicExecutionRole` for logs (`AWSLambdaExecute` removed)
-- `herop-geodata` public `GetObject` for `oeps/` (no extra IAM on the Lambda role for v1)
+- `oeps-geodata` public `GetObject` for `oeps/` (no extra IAM on the Lambda role for v1)
 - Function `herop-sdohplace-spatial` in `us-east-2` (container image)
 - EC2 instance role **`SDOHPlaceManagerRole`** (solr1): `lambda:InvokeFunction` on `herop-sdohplace-spatial` ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11))
 

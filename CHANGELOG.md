@@ -6,7 +6,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 
 ### Added
 
-- CSV join reports `error_code: missing_boundaries` with a curator-facing `message` when the `oeps/{level}-{year}` shapefile is missing (HTTP 403/404), instead of a raw S3 403. Example: “2010 ZCTA boundaries aren’t in the library.” Manager may append “contact us.” RAs filling 2010 vintages in `herop-geodata` removes the error without a Lambda change.
+- CSV join reports `error_code: missing_boundaries` with a curator-facing `message` when the `oeps/{level}-{year}` shapefile is missing (HTTP 403/404), instead of a raw S3 403. Example: “2010 ZCTA boundaries aren’t in the library.” Manager may append “contact us.” RAs filling 2010 vintages in `oeps-geodata` removes the error without a Lambda change.
 - Lambda handler stub ([#2](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/2)): reads the manager invoke payload, derives the job folder from `s3_key`, writes `result.json` next to the upload as `ok: false` / `error_code: not_implemented`. No fake success geometry.
 - Geo path (`upload_kind: geo`) also reads **GeoPackage** (`.gpkg`), same dissolve/simplify as GeoJSON / shapefile zip. Still no HEROP join. KML / file gdb stay rejected.
 - Geo path ([#6](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/6)): `upload_kind: geo` reads GeoJSON, GeoPackage, or a shapefile zip, reprojects to EPSG:4326, simplifies, and writes WKT, `ENVELOPE(W,E,N,S)`, and centroid (`lat,lon`). `highlight_ids` and `spatial_coverage` are `[]` plus warnings (no HEROP join, no place-name matching). KML / file gdb are rejected.
@@ -18,6 +18,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 
 ### Changed
 
+- CSV join downloads Census `oeps/{level}-{year}-500k-shp.zip` from **`oeps-geodata`** ([#24](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/24)). Prefix stays `oeps/` (not `census/` or `sdohplace/`). Lambda, role, ECR, and uploads bucket `herop-sdohplace-upload` are unchanged. Anonymous HTTPS GET; no IAM on the geodata bucket.
 - Uploads bucket name is **`herop-sdohplace-upload`** (singular), matching the bucket Pengyin created ([#3](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/3)).
 
 ### Confirmed
