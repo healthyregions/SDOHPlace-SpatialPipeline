@@ -29,6 +29,7 @@ All notable changes to this repo are listed here. The Lambda is a pure function:
 
 ### AWS (not code)
 
+- Live container image for `herop-sdohplace-spatial` rebuilt ([#26](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/26)) so CSV join downloads `oeps/` shapefiles from `oeps-geodata`. Image digest `sha256:aee6e4f5014e7a4b690fa925725750c3441cd443c80251a80991a6aa9f02459a`. Build with `--provenance=false --sbom=false` so Lambda gets a single image manifest.
 - Execution role `herop-sdohplace-spatial-role` (Lambda trust, scoped S3 including ListBucket on the bucket ARN, CloudWatch logs). `AWSLambdaExecute` removed. Function `herop-sdohplace-spatial` is live in `us-east-2`.
 - EC2 role `SDOHPlaceManagerRole` (solr1) has `lambda:InvokeFunction` on `herop-sdohplace-spatial` ([#11](https://github.com/healthyregions/SDOHPlace-SpatialPipeline/issues/11)).
 

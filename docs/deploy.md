@@ -15,12 +15,14 @@ From the repo root (Docker must be able to build `linux/amd64`):
 ```
 aws ecr create-repository --repository-name herop-sdohplace-spatial --region us-east-2
 aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin ACCOUNT.dkr.ecr.us-east-2.amazonaws.com
-docker build --platform linux/amd64 -t herop-sdohplace-spatial .
+docker build --platform linux/amd64 --provenance=false --sbom=false -t herop-sdohplace-spatial .
 docker tag herop-sdohplace-spatial:latest ACCOUNT.dkr.ecr.us-east-2.amazonaws.com/herop-sdohplace-spatial:latest
 docker push ACCOUNT.dkr.ecr.us-east-2.amazonaws.com/herop-sdohplace-spatial:latest
 ```
 
 If `create-repository` says the repo already exists, continue.
+
+`--provenance=false --sbom=false` keeps a single image manifest. Docker Desktop otherwise pushes an attestation index that Lambda rejects (`The image manifest, config or layer media type … is not supported`).
 
 Lambda needs permission to pull the image. After the first push, in ECR → repository → Permissions, allow `lambda.amazonaws.com` to `ecr:BatchGetImage` and `ecr:GetDownloadUrlForLayer`, or create the function in the console and let it attach the policy.
 
