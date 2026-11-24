@@ -133,7 +133,7 @@ uploads/{record_id}/{timestamp}/result.json
 
 One Generate click = one directory. Several jobs can exist at once (different `{timestamp}` folders). Not “only one job on the whole bucket.” Bucket she created: **`herop-sdohplace-upload`** (singular), `us-east-2`, no public access. Execution role: `herop-sdohplace-spatial-role`.
 
-HEROP merge files live in **`oeps/`** on `herop-geodata` (2010 and 2018 shapefiles). Discovery **tiles** live under **`sdohplace/`** and are **2018 only** for all six levels; frontend hardcodes `<level>-2018.pmtiles`. Those two prefixes are easy to mix up.
+HEROP merge files live in **`oeps/`** on `oeps-geodata` (2010 and 2018 shapefiles). Discovery **tiles** live under **`sdohplace/`** and are **2018 only** for all six levels; frontend hardcodes `<level>-2018.pmtiles`. Those two prefixes are easy to mix up.
 
 ---
 
@@ -206,7 +206,7 @@ Related sibling repos (not this pipeline): `sdohplace-data-discovery`, `sdohplac
 
 **RA geo formats + points (Marynia, Sept 2026).** Majority of datasets: shapefile, GeoJSON, or GeoPackage (not CSV). Point features already in those files are covered by `upload_kind: geo`. **Geocoding is out of scope.** CSV with lat/long columns (Chicago crime-style) is a **new extension for October**, not this slice.
 
-**Missing 2010 layers (Marynia, Sept 2026).** RAs can add missing decennial vintages; 2010 should exist for every level. Lambda reads `oeps/{level}-{year}-500k-shp.zip` on `herop-geodata`. Once `zcta-2010` is there, the 403 / `missing_boundaries` case goes away with no code change. Do not work around a missing file by joining 2010 IDs onto 2018 units.
+**Missing 2010 layers (Marynia, Sept 2026).** RAs can add missing decennial vintages; 2010 should exist for every level. Lambda reads `oeps/{level}-{year}-500k-shp.zip` on `oeps-geodata`. Once `zcta-2010` is there, the 403 / `missing_boundaries` case goes away with no code change. Do not work around a missing file by joining 2010 IDs onto 2018 units.
 
 ---
 
@@ -237,7 +237,7 @@ Not a frozen enum, but use these so manager and Lambda match:
 | --- | --- |
 | `not_implemented` | Stub handler only; derivation not built yet. Manager can still poll `result.json`. |
 | `unreadable_file` | Cannot read CSV/zip/GeoJSON |
-| `missing_boundaries` | Chosen `{spatial_level}` + `{boundary_year}` shapefile is not in `oeps/` (HTTP 403/404). Curator-facing `message` like “2010 ZCTA boundaries aren’t in the library.” Manager may add “contact us”. Do not tell users to switch vintage; RAs add missing decennial files to `herop-geodata`. |
+| `missing_boundaries` | Chosen `{spatial_level}` + `{boundary_year}` shapefile is not in `oeps/` (HTTP 403/404). Curator-facing `message` like “2010 ZCTA boundaries aren’t in the library.” Manager may add “contact us”. Do not tell users to switch vintage; RAs add missing decennial files to `oeps-geodata`. |
 | `no_id_column` | No FIPS / GEOID / HEROP_ID / named column |
 | `no_matching_ids` | Zero IDs matched the chosen vintage/level |
 | `empty_geometry` | Dissolve produced nothing |

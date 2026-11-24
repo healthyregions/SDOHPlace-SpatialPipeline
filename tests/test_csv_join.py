@@ -138,7 +138,16 @@ def test_handler_csv_uses_injected_master(monkeypatch):
 
 
 def test_shapefile_url_2010_county():
-    assert shapefile_url("county", 2010).endswith("oeps/county-2010-500k-shp.zip")
+    url = shapefile_url("county", 2010)
+    assert url.startswith("https://oeps-geodata.s3.us-east-2.amazonaws.com/")
+    assert url.endswith("oeps/county-2010-500k-shp.zip")
+
+
+def test_shapefile_url_host_is_oeps_geodata():
+    url = shapefile_url("county", 2018)
+    assert "oeps-geodata.s3.us-east-2.amazonaws.com" in url
+    assert "herop-geodata" not in url
+    assert url.endswith("oeps/county-2018-500k-shp.zip")
 
 
 def test_csv_2010_geometry_empty_highlight_ids():

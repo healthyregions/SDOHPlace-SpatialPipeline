@@ -3,7 +3,7 @@
 from sdohplace_spatial.errors import PipelineError
 
 OEPS_SHP_TEMPLATE = (
-    "https://herop-geodata.s3.us-east-2.amazonaws.com/oeps/{level}-{year}-500k-shp.zip"
+    "https://oeps-geodata.s3.us-east-2.amazonaws.com/oeps/{level}-{year}-500k-shp.zip"
 )
 SUPPORTED_BOUNDARY_YEARS = (2010, 2018)
 
